@@ -41,7 +41,7 @@ def check():
                             dict(raw, subjects={'数学':'../same', '英语':'../same'}),
                             dict(raw, subjects={'数学':str(ROOT/'北京题库')}),
                             dict(raw, subjects={'数学':str(ROOT/'pipeline')}),
-                            dict(raw, subjects={'数学':str(ROOT/'pipeline/native-assets')}),
+                            dict(raw, subjects={'数学':str(ROOT/'pipeline/raw-data')}),
                             dict(raw, subjects={'数学':''})]:
                 save(invalid)
                 try:
