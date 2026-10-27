@@ -1,0 +1,652 @@
+{
+  "date": "2026-10-27",
+  "accepted_criterion": "每组Top5至少一张完整符合核心要求的题图",
+  "corpus": {
+    "source_papers": 11659,
+    "source_pages": 157658,
+    "question_crops": 185722,
+    "math": 116987,
+    "english": 68735,
+    "coverage_complete": true
+  },
+  "scope": "仅当前可用原生PDF坐标裁剪的单题；跨页、材料不明及三份预览页数变化资料暂缓。",
+  "encoding": {
+    "model": "Qwen3-VL-Embedding-2B",
+    "dimensions": 2048,
+    "question_input": "image_only",
+    "answers_embedded": false
+  },
+  "fresh10": {
+    "snapshot_crops": 185722,
+    "heldout": true,
+    "method": "逐图目视核验；full满足核心题材与任务，partial部分满足，fail不符，incomplete截图缺失所需内容。",
+    "acceptance": "每条自然语言要求的Top5中至少有一张full；不要求五张全部匹配。",
+    "counts": {
+      "partial": 8,
+      "full": 33,
+      "fail": 7,
+      "incomplete": 2
+    },
+    "queries_with_full_match": 10,
+    "top1_full": 7,
+    "limitation": "小规模人工样本；不能据此推断全库准确率。已知仍有重复、英语语法误匹配和写作裁剪不完整。",
+    "queries": [
+      {
+        "query": "找高中数学椭圆题，已知焦点、长轴或短轴的条件，求椭圆的标准方程，最好是选择题。",
+        "results": [
+          {
+            "id": "math-190741-p002-q10001",
+            "assessment": "partial",
+            "reason": "求过指定点的椭圆，未给焦点或轴长条件。"
+          },
+          {
+            "id": "math-147383-p001-q10001",
+            "assessment": "full",
+            "reason": "已知焦点和距离和，求椭圆标准方程。"
+          },
+          {
+            "id": "math-147383-p001-q10004",
+            "assessment": "full",
+            "reason": "已知长短轴比例及焦距，求标准方程。"
+          },
+          {
+            "id": "math-139601-p002-q10004",
+            "assessment": "full",
+            "reason": "利用面积与等边三角形条件求椭圆方程。"
+          },
+          {
+            "id": "math-189270-p004-q10002",
+            "assessment": "full",
+            "reason": "已知焦点和经过的点，求标准方程；非选择题。"
+          }
+        ]
+      },
+      {
+        "query": "找等比数列的练习，给出首项、公比或其他条件，要求求通项公式或前n项和。",
+        "results": [
+          {
+            "id": "math-120579-p001-q10001",
+            "assessment": "full",
+            "reason": "等比数列条件求前四项和。"
+          },
+          {
+            "id": "math-127255-p001-q10001",
+            "assessment": "partial",
+            "reason": "仅求第六项，不是通项或前n项和。"
+          },
+          {
+            "id": "math-131881-p001-q10001",
+            "assessment": "partial",
+            "reason": "仅求首项，不是通项或前n项和。"
+          },
+          {
+            "id": "math-118436-p001-q10004",
+            "assessment": "full",
+            "reason": "由第二、四项求前七项和。"
+          },
+          {
+            "id": "math-129200-p002-q10004",
+            "assessment": "partial",
+            "reason": "等比数列与其他数列混合，非直接通项或求和任务。"
+          }
+        ]
+      },
+      {
+        "query": "找条件概率题，例如不放回摸球，已知第一次摸球的结果，再计算下一次摸球的概率。",
+        "results": [
+          {
+            "id": "math-162420-p002-q10004",
+            "assessment": "full",
+            "reason": "已知第一次摸球结果，求不放回第二次摸球的条件概率。"
+          },
+          {
+            "id": "math-156419-p001-q10001",
+            "assessment": "full",
+            "reason": "已知第一次摸球结果，求不放回第二次摸球的条件概率。"
+          },
+          {
+            "id": "math-118814-p001-q10004",
+            "assessment": "full",
+            "reason": "已知第一次摸球结果，求不放回第二次摸球的条件概率。"
+          },
+          {
+            "id": "math-180805-p002-q10004",
+            "assessment": "full",
+            "reason": "已知第一次摸球结果，求不放回第二次摸球的条件概率。"
+          },
+          {
+            "id": "math-162987-p002-q10006",
+            "assessment": "full",
+            "reason": "已知第一次摸球结果，求不放回第二次摸球的条件概率。"
+          }
+        ]
+      },
+      {
+        "query": "找高中数学复数的选择题，考查虚数单位i的运算、复数四则运算或共轭复数。",
+        "results": [
+          {
+            "id": "math-147806-p001-q10001",
+            "assessment": "full",
+            "reason": "复数虚部、模、共轭及复平面选择题。"
+          },
+          {
+            "id": "math-162221-p002-q10015",
+            "assessment": "partial",
+            "reason": "考查复数运算与共轭，但不是要求的选择题。"
+          },
+          {
+            "id": "math-112842-p001-q10001",
+            "assessment": "full",
+            "reason": "复数运算及共轭选择题。"
+          },
+          {
+            "id": "math-114866-p001-q10004",
+            "assessment": "full",
+            "reason": "复数运算、模与共轭选择题。"
+          },
+          {
+            "id": "math-147807-p001-q10003",
+            "assessment": "full",
+            "reason": "复数相关选择题，与第一条重复。"
+          }
+        ]
+      },
+      {
+        "query": "找二项式定理练习，要求求展开式中特定项的系数或常数项。",
+        "results": [
+          {
+            "id": "math-121501-p002-q10001",
+            "assessment": "partial",
+            "reason": "判断是否存在常数项等任务，非直接求特定项系数。"
+          },
+          {
+            "id": "math-162416-p002-q10013",
+            "assessment": "full",
+            "reason": "求特定幂的系数与第四项。"
+          },
+          {
+            "id": "math-171642-p003-q10003",
+            "assessment": "partial",
+            "reason": "最大二项式系数、含有理项及求和，非指定系数任务。"
+          },
+          {
+            "id": "math-194995-p001-q10004",
+            "assessment": "full",
+            "reason": "求常数项的选择题。"
+          },
+          {
+            "id": "math-162655-p002-q10013",
+            "assessment": "full",
+            "reason": "求指定幂的系数。"
+          }
+        ]
+      },
+      {
+        "query": "找英语非谓语动词练习，给出括号内的动词，让学生填入to do、doing或done等正确形式。",
+        "results": [
+          {
+            "id": "english-167089-p001-q10011",
+            "assessment": "full",
+            "reason": "括号内动词do的非谓语填空。"
+          },
+          {
+            "id": "english-125523-p001-q10010",
+            "assessment": "fail",
+            "reason": "词库选词填空，不是括号给定动词的非谓语任务。"
+          },
+          {
+            "id": "english-125521-p001-q10020",
+            "assessment": "fail",
+            "reason": "词库选词填空，与第二条重复。"
+          },
+          {
+            "id": "english-180691-p002-q20012",
+            "assessment": "partial",
+            "reason": "含省略to的不定式，但属于词库填空。"
+          },
+          {
+            "id": "english-180691-p002-q20011",
+            "assessment": "fail",
+            "reason": "词库短语填空，不符合指定动词形式任务。"
+          }
+        ]
+      },
+      {
+        "query": "找英语时态填空练习，重点考查现在完成时和一般过去时，根据语境填写括号中动词的正确形式。",
+        "results": [
+          {
+            "id": "english-155656-p003-q20011",
+            "assessment": "fail",
+            "reason": "词库短语填空，不考查所要求的两种时态。"
+          },
+          {
+            "id": "english-180693-p003-q20006",
+            "assessment": "fail",
+            "reason": "词库短语填空，不考查所要求的两种时态。"
+          },
+          {
+            "id": "english-155656-p003-q10020",
+            "assessment": "fail",
+            "reason": "形容词选词填空。"
+          },
+          {
+            "id": "english-154923-p002-q10018",
+            "assessment": "full",
+            "reason": "根据until now等语境填写finish的现在完成时。"
+          },
+          {
+            "id": "english-180693-p003-q20015",
+            "assessment": "fail",
+            "reason": "形容词选词填空，与第三条重复。"
+          }
+        ]
+      },
+      {
+        "query": "找英语应用文写作题，给外国朋友写一封道歉信，说明不能按原计划赴约的原因，并提出新的安排。",
+        "results": [
+          {
+            "id": "english-193941-p003-q10005",
+            "assessment": "full",
+            "reason": "向英国朋友取消周末安排，解释原因并提出新安排，题干完整。"
+          },
+          {
+            "id": "english-128474-p010-q10001",
+            "assessment": "incomplete",
+            "reason": "道歉信题材相关，但截图漏掉第三条要求：推迟到八月。"
+          },
+          {
+            "id": "english-128474-p001-q10001",
+            "assessment": "full",
+            "reason": "向英国朋友取消周末安排，原因及建议齐全。"
+          },
+          {
+            "id": "english-105073-p003-q10002",
+            "assessment": "incomplete",
+            "reason": "道歉信题材相关，但截图漏掉第三条要求：推迟到八月。"
+          },
+          {
+            "id": "english-132900-p003-q10001",
+            "assessment": "full",
+            "reason": "道歉信完整，与其他来源题干相似。"
+          }
+        ]
+      },
+      {
+        "query": "找环境保护主题的英语阅读理解，内容涉及塑料垃圾、回收或减少污染，保留完整文章并附一道选择题和四个选项。",
+        "results": [
+          {
+            "id": "english-186697-p015-q20001",
+            "assessment": "full",
+            "reason": "塑料与回收主题，完整文章附一道四选一题。"
+          },
+          {
+            "id": "english-167128-p020-q20001",
+            "assessment": "full",
+            "reason": "珠峰微塑料污染主题，完整文章附一道四选一题。"
+          },
+          {
+            "id": "english-125562-p006-q10004",
+            "assessment": "full",
+            "reason": "塑料袋环保成本主题，完整文章附一道四选一题。"
+          },
+          {
+            "id": "english-167128-p020-q20002",
+            "assessment": "full",
+            "reason": "同一微塑料文章的另一道四选一题，材料完整。"
+          },
+          {
+            "id": "english-125564-p003-q10003",
+            "assessment": "full",
+            "reason": "人体微塑料研究主题，完整文章附一道四选一题。"
+          }
+        ]
+      },
+      {
+        "query": "找英语完形填空，故事讲主人公克服困难、坚持练习或成长的经历，保留完整短文并附一道空格题的四个选项。",
+        "results": [
+          {
+            "id": "english-109453-p016-q20018",
+            "assessment": "full",
+            "reason": "视力障碍女孩跌倒后坚持成长的完整故事，附一道完形四选一。"
+          },
+          {
+            "id": "english-109453-p016-q20014",
+            "assessment": "full",
+            "reason": "视力障碍女孩跌倒后坚持成长的完整故事，附一道完形四选一。"
+          },
+          {
+            "id": "english-125415-p004-q10017",
+            "assessment": "full",
+            "reason": "视力障碍女孩跌倒后坚持成长的完整故事，附一道完形四选一。"
+          },
+          {
+            "id": "english-125415-p004-q10018",
+            "assessment": "full",
+            "reason": "视力障碍女孩跌倒后坚持成长的完整故事，附一道完形四选一。"
+          },
+          {
+            "id": "english-109453-p016-q20002",
+            "assessment": "full",
+            "reason": "视力障碍女孩跌倒后坚持成长的完整故事，附一道完形四选一。"
+          }
+        ]
+      }
+    ]
+  },
+  "regression10": {
+    "snapshot_crops": 185722,
+    "heldout": false,
+    "method": "逐图目视核验；full满足核心题材与任务，partial部分满足，fail不符，incomplete截图缺失所需内容。",
+    "acceptance": "每条自然语言要求的Top5中至少有一张full；不要求五张全部匹配。",
+    "counts": {
+      "full": 46,
+      "partial": 4
+    },
+    "queries_with_full_match": 10,
+    "top1_full": 8,
+    "limitation": "小规模人工样本；不能据此推断全库准确率。已知仍有重复、英语语法误匹配和写作裁剪不完整。",
+    "provenance": "前9组45张与已目视核验的同题规则对照结果ID及图片路径完全相同；第10组5张修复后的新图已另行目视核验。原10组用于过规则调试，不是独立留出集。",
+    "queries": [
+      {
+        "query": "给高一学生找三角函数练习，考查正弦函数图像的周期、平移或单调区间，题目最好带图。",
+        "results": [
+          {
+            "id": "math-118446-p002-q10001",
+            "assessment": "full",
+            "reason": "三角函数周期、对称和单调性质；未配图。"
+          },
+          {
+            "id": "math-162044-p002-q10003",
+            "assessment": "full",
+            "reason": "正弦函数图像平移；未配图。"
+          },
+          {
+            "id": "math-127539-p001-q10004",
+            "assessment": "full",
+            "reason": "三角函数周期与单调性；未配图。"
+          },
+          {
+            "id": "math-118446-p003-q10001",
+            "assessment": "full",
+            "reason": "三角函数周期及单调区间；未配图。"
+          },
+          {
+            "id": "math-132563-p002-q10003",
+            "assessment": "full",
+            "reason": "三角函数周期与奇函数性质；未配图。"
+          }
+        ]
+      },
+      {
+        "query": "找立体几何题，图中有棱锥或棱柱，需要用空间向量求直线与平面的夹角。",
+        "results": [
+          {
+            "id": "math-139582-p001-q10002",
+            "assessment": "full",
+            "reason": "正四棱锥线面角，附完整图和选项。"
+          },
+          {
+            "id": "math-112844-p003-q10003",
+            "assessment": "full",
+            "reason": "正方体线线角及线面角，附完整图。"
+          },
+          {
+            "id": "math-189969-p011-q10003",
+            "assessment": "full",
+            "reason": "三棱柱线面角的正弦值，附完整图。"
+          },
+          {
+            "id": "math-189966-p009-q10001",
+            "assessment": "full",
+            "reason": "三棱柱线面角的正弦值，附完整图。"
+          },
+          {
+            "id": "math-115002-p002-q10002",
+            "assessment": "full",
+            "reason": "与第2项同题，包含线面角。"
+          }
+        ]
+      },
+      {
+        "query": "找利用导数判断函数单调区间并求极大值或极小值的高中数学题。",
+        "results": [
+          {
+            "id": "math-162400-p001-q10003",
+            "assessment": "full",
+            "reason": "求单调区间、极大值与极小值。"
+          },
+          {
+            "id": "math-162737-p001-q10004",
+            "assessment": "full",
+            "reason": "与第1项同题，求单调区间和极值。"
+          },
+          {
+            "id": "math-171558-p002-q10003",
+            "assessment": "full",
+            "reason": "求切线、单调区间和极值。"
+          },
+          {
+            "id": "math-189458-p002-q10003",
+            "assessment": "full",
+            "reason": "导数求单调区间及极大值点对应参数。"
+          },
+          {
+            "id": "math-121134-p004-q10004",
+            "assessment": "full",
+            "reason": "求单调区间和极值。"
+          }
+        ]
+      },
+      {
+        "query": "找概率题，要求列出离散型随机变量的分布列，并计算数学期望。",
+        "results": [
+          {
+            "id": "math-112252-p004-q10003",
+            "assessment": "full",
+            "reason": "掷骰游戏，列分布列并求期望。"
+          },
+          {
+            "id": "math-195393-p001-q10004",
+            "assessment": "full",
+            "reason": "有放回摸球，列分布列并求期望。"
+          },
+          {
+            "id": "math-112250-p005-q10002",
+            "assessment": "full",
+            "reason": "有放回取球数字和，列分布列并求期望。"
+          },
+          {
+            "id": "math-182090-p001-q10003",
+            "assessment": "full",
+            "reason": "不放回摸球，列分布列并求期望。"
+          },
+          {
+            "id": "math-119448-p003-q10006",
+            "assessment": "full",
+            "reason": "知识竞赛人数，列分布列并求期望。"
+          }
+        ]
+      },
+      {
+        "query": "找数列题，已知等差数列的条件，求通项公式或前n项和。",
+        "results": [
+          {
+            "id": "math-171915-p001-q10007",
+            "assessment": "full",
+            "reason": "等差数列条件求通项。"
+          },
+          {
+            "id": "math-150437-p001-q10004",
+            "assessment": "full",
+            "reason": "已知S3和a8求S9。"
+          },
+          {
+            "id": "math-119439-p001-q10007",
+            "assessment": "full",
+            "reason": "已知a1和a5求前5项和。"
+          },
+          {
+            "id": "math-139341-p001-q10001",
+            "assessment": "full",
+            "reason": "已知首两项求前5项和。"
+          },
+          {
+            "id": "math-128657-p002-q10001",
+            "assessment": "full",
+            "reason": "等差数列求通项及前n项和最小值。"
+          }
+        ]
+      },
+      {
+        "query": "找高中英语被动语态的语法练习，根据句意填入动词的正确形式。",
+        "results": [
+          {
+            "id": "english-125410-p002-q10002",
+            "assessment": "full",
+            "reason": "A new house ... (build)，被动语态动词形式填空。"
+          },
+          {
+            "id": "english-155519-p001-q10014",
+            "assessment": "full",
+            "reason": "computer ... (repair) now，被动语态动词形式填空。"
+          },
+          {
+            "id": "english-154958-p001-q10011",
+            "assessment": "full",
+            "reason": "与第1项同题，房屋正在建造。"
+          },
+          {
+            "id": "english-180598-p001-q10003",
+            "assessment": "full",
+            "reason": "We ... (shock)，动词被动形式填空。"
+          },
+          {
+            "id": "english-171693-p001-q10006",
+            "assessment": "full",
+            "reason": "he ... (examine) by the doctor，被动语态填空。"
+          }
+        ]
+      },
+      {
+        "query": "找英语定语从句练习，考查which、that或whose等关系词，可以是单句填空。",
+        "results": [
+          {
+            "id": "english-167090-p001-q10001",
+            "assessment": "partial",
+            "reason": "定语从句选择，正确词为when，which/that/whose为干扰项。"
+          },
+          {
+            "id": "english-110272-p001-q10005",
+            "assessment": "full",
+            "reason": "from which关系从句选择。"
+          },
+          {
+            "id": "english-110272-p002-q10001",
+            "assessment": "full",
+            "reason": "Kate, whose sister...关系从句选择。"
+          },
+          {
+            "id": "english-125576-p002-q10001",
+            "assessment": "partial",
+            "reason": "which/that关系从句填空，但混入后续另一任务说明。"
+          },
+          {
+            "id": "english-112530-p001-q10003",
+            "assessment": "partial",
+            "reason": "as引导非限制性定语从句，未重点考查which/that/whose。"
+          }
+        ]
+      },
+      {
+        "query": "找英语应用文写作题，要求给外国朋友写一封邀请信，邀请对方参加活动。",
+        "results": [
+          {
+            "id": "english-171811-p003-q10001",
+            "assessment": "partial",
+            "reason": "邀请外教Mr Jones任评委，符合邀请信但对象不是外国朋友。"
+          },
+          {
+            "id": "english-193941-p003-q10001",
+            "assessment": "full",
+            "reason": "邀请英国好友Jim做英语写作线上交流，提示完整。"
+          },
+          {
+            "id": "english-137453-p003-q10001",
+            "assessment": "full",
+            "reason": "邀请英国好友Jim参加英语交流活动，提示完整。"
+          },
+          {
+            "id": "english-79414-p009-q10001",
+            "assessment": "full",
+            "reason": "邀请美国朋友Jim参加Knowing Beijing活动，提示完整。"
+          },
+          {
+            "id": "english-154978-p003-q10005",
+            "assessment": "full",
+            "reason": "邀请交换生Jim参加秋游，提示完整。"
+          }
+        ]
+      },
+      {
+        "query": "找英语阅读理解题，文章讨论科技或人工智能对人们生活的影响，带一道阅读选择题及其选项。",
+        "results": [
+          {
+            "id": "english-137486-p007-q10004",
+            "assessment": "full",
+            "reason": "科技利弊阅读，完整文章和一道4选项题。"
+          },
+          {
+            "id": "english-173765-p006-q10002",
+            "assessment": "full",
+            "reason": "AI/AGI影响阅读，完整文章及词义选择。"
+          },
+          {
+            "id": "english-109457-p016-q10003",
+            "assessment": "full",
+            "reason": "与第2项同题，完整文章及词义选择。"
+          },
+          {
+            "id": "english-125423-p001-q10001",
+            "assessment": "full",
+            "reason": "与第2项同题，完整文章及词义选择。"
+          },
+          {
+            "id": "english-155586-p001-q10002",
+            "assessment": "full",
+            "reason": "AI焦虑与生活就业影响文章及一道选择题。"
+          }
+        ]
+      },
+      {
+        "query": "找英语完形填空题，文章讲述人与人之间的帮助，附一道空格题的A、B、C、D四个选项。",
+        "results": [
+          {
+            "id": "english-81840-p013-q20006",
+            "assessment": "full",
+            "reason": "完整的柬埔寨食堂互助故事，附一道完形空格及其四个选项。"
+          },
+          {
+            "id": "english-81840-p013-q20007",
+            "assessment": "full",
+            "reason": "完整的柬埔寨食堂互助故事，附一道完形空格及其四个选项。"
+          },
+          {
+            "id": "english-81840-p013-q20014",
+            "assessment": "full",
+            "reason": "完整的柬埔寨食堂互助故事，附一道完形空格及其四个选项。"
+          },
+          {
+            "id": "english-81840-p013-q20005",
+            "assessment": "full",
+            "reason": "完整的柬埔寨食堂互助故事，附一道完形空格及其四个选项。"
+          },
+          {
+            "id": "english-81840-p013-q20009",
+            "assessment": "full",
+            "reason": "完整的柬埔寨食堂互助故事，附一道完形空格及其四个选项。"
+          }
+        ]
+      }
+    ]
+  }
+}
