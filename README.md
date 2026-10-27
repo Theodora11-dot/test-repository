@@ -82,3 +82,21 @@ CUDA_VISIBLE_DEVICES=0 python infer.py \
 标准输出返回 JSON 结果，模型加载信息写入标准错误。结果中的 `image` 是相对于 `题库处理/` 的截图路径，`score` 是排序得分，还会返回来源、页码等信息。打开对应图片即可查看原题。
 
 `--limit 5` 最多返回 5 条；当前排序会过滤低于本次最高分 85% 的候选，因此可能少于 5 条。要求中仅部分关键词命中也能返回结果，未命中项不会报错；年级、难度等偏好不保证全部满足。答案解析不参与题图 embedding，检索结果仍需结合截图确认是否符合要求。
+
+连续查询时，在同一个 Python 进程复用模型和索引快照，避免每条查询都重新加载。先进入 `题库处理/`，再使用：
+
+```python
+from contextlib import closing
+from embedding import Encoder, MAX_PIXELS, check_encoder
+from infer import open_index, prepare_search, search
+
+with closing(open_index()) as db:
+    check_encoder(db)
+    encoder = Encoder(MAX_PIXELS)
+    corpus = prepare_search(db, device=encoder.device)
+    for query in ('高一三角函数的周期和平移', '高中英语邀请信写作'):
+        results = search(db, encoder, query, limit=5, corpus=corpus)
+        print(results)
+```
+
+这段代码只在开始时加载一次模型和全库向量；后续每条要求只编码查询文本并检索已有向量。
