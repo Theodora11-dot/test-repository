@@ -1,5 +1,0 @@
-# Optional legacy OCR/tagging route. The coordinate/vector pipeline does not need these.
--r requirements.txt
-paddleocr[doc-parser]==3.7.0
-paddlex==3.7.2
-cryptography==44.0.3

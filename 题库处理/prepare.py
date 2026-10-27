@@ -1,4 +1,5 @@
-"""Resume coordinate-only crops after the offline audit, retaining existing image vectors."""
+"""Prepare question data: audit PDFs, crop questions and build/publish vectors on eight GPUs."""
+import argparse
 import concurrent.futures
 import fcntl
 import json
@@ -9,9 +10,7 @@ import subprocess
 import sys
 import time
 
-ROOT=Path(__file__).resolve().parents[1]
-sys.path.insert(0,str(ROOT))
-from pipeline import atomic_json
+from common import ROOT, atomic_json
 
 PDF=ROOT/'pdf-fast'
 RUN=PDF/'crops-run'
@@ -39,7 +38,7 @@ def run(recheck=False):
     if recheck:
         if json.loads((RUN/'status.json').read_text())['state']!='finished':raise ValueError('initial crop batch must finish before repair')
     elif not (PDF/'audit-current.jsonl').exists():
-        raise ValueError('Run pdf_native.py to audit cached PDFs before starting this batch')
+        raise ValueError('Run prepare.py audit to audit cached PDFs before starting this batch')
     # Do not let old finished status files terminate consumers before the producer starts.
     for folder,prefix in [(RUN,'progress'),(INDEX,'status')]:
         for shard in range(8):
@@ -55,20 +54,42 @@ def run(recheck=False):
         futures=[pool.submit(supervise,[PYTHON,'-u',str(ROOT/script)],RUN/(prefix+'.log'),producer=True)]
         for shard in range(8):
             env=dict(os.environ,CUDA_VISIBLE_DEVICES=str(shard))
-            command=[PYTHON,'-u',str(ROOT/'embedding.py'),'build','--all','--shard',str(shard),'--follow','--native-crops']
+            command=[PYTHON,'-u',str(ROOT/'index.py'),'build','--shard',str(shard),'--follow']
             futures.append(pool.submit(supervise,command,INDEX/f'{prefix}-{shard}.log',env))
-        futures.append(pool.submit(supervise,[PYTHON,'-u',str(ROOT/'embedding.py'),'merge','--follow','--native-crops'],INDEX/(prefix+'-publisher.log')))
+        futures.append(pool.submit(supervise,[PYTHON,'-u',str(ROOT/'index.py'),'merge','--follow'],INDEX/(prefix+'-publisher.log')))
         for future in concurrent.futures.as_completed(futures):future.result()
     atomic_json(PDF/'backfill-supervisor.json',dict(state='finished',pid=os.getpid(),updated=time.time(),data_repair=recheck))
 
 
-if __name__=='__main__':
-    for folder in (PDF,RUN,INDEX):folder.mkdir(parents=True,exist_ok=True)
-    if '--check' in sys.argv:
-        assert Path(PYTHON).is_file() and all((ROOT/name).is_file() for name in ['native_crop.py','native_sweep.py'])
-        print('PASS current Python interpreter and batch entry points')
-    else:
-        with (PDF/'backfill-supervisor.lock').open('a') as lock:
-            fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-            atomic_json(PDF/'backfill-supervisor.json',dict(state='waiting_for_offline_audit',pid=os.getpid(),updated=time.time()))
-            run(recheck='--data-repair' in sys.argv)
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('command', nargs='?', choices=['audit', 'build', 'repair', 'status'])
+    parser.add_argument('--auth-file', type=Path, help='audit：可选的现有网站会话凭证；省略时仅检查缓存')
+    parser.add_argument('--sample', type=int, default=0, help='audit：仅检查指定数量的试卷，0 表示全部')
+    parser.add_argument('--check', action='store_true', help='仅检查批处理入口，不启动任务')
+    args = parser.parse_args()
+    if args.check:
+        assert Path(PYTHON).is_file() and all((ROOT/name).is_file() for name in ['pdf_native.py','native_crop.py','native_sweep.py','index.py'])
+        print('PASS current Python interpreter and preparation entry points')
+        return
+    if args.command is None:
+        parser.error('请指定 audit、build、repair 或 status')
+    if args.sample < 0 or (args.command != 'audit' and (args.auth_file or args.sample)):
+        parser.error('--auth-file 和非负的 --sample 仅用于 audit')
+    if args.command == 'audit':
+        from pdf_native import audit
+        audit(args.auth_file, args.sample)
+        return
+    if args.command == 'status':
+        subprocess.run([PYTHON, str(ROOT/'index.py'), 'status'], check=True)
+        return
+    for folder in (PDF,RUN,INDEX):
+        folder.mkdir(parents=True,exist_ok=True)
+    with (PDF/'backfill-supervisor.lock').open('a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        atomic_json(PDF/'backfill-supervisor.json',dict(state='waiting_for_offline_audit',pid=os.getpid(),updated=time.time()))
+        run(recheck=args.command == 'repair')
+
+
+if __name__ == '__main__':
+    main()

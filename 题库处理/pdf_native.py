@@ -12,19 +12,12 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from urllib.parse import urlencode
 
-from pipeline import ROOT, atomic_json, load_papers
+from common import ROOT, atomic_json, load_papers, SOLUTION_CUE, is_exam_instruction
 
 DIRECTORY = ROOT / "pdf-fast"
 NS = {"x": "http://www.w3.org/1999/xhtml"}
 STOP = threading.Event()
 AUDIT_VERSION = "native-v3"
-EXAM_NOTE = re.compile(r"^\s*(?:\d{1,3}\s*[.．、]\s*)?(?:本(?:试)?卷|试题答案一律|请将(?:试题)?答案|考生(?:务必|必须|须)|答题(?:前|时|后)|考试结束|注意事项)")
-ANSWER_CUE = re.compile(r"【(?:答案|解析|详解|分析|解答|点睛|(?:参考)?范文)】|【作者\s*ChatGPT】|^[^\S\r\n]*\d{1,3}[^\S\r\n]*[.．、][^\S\r\n]*(?:答案\s*[:：]|[A-G][^\S\r\n]*(?:。|$)|考查[^\n]{0,30}[。．.]\s*句意[:：])|^[^\S\r\n]*(?:解|解析|解答|参考范文)[^\S\r\n]*[:：]|^[^\S\r\n]*(?:(?:参考)?范文|(?:One\s+)?possible\s+version)\s*[:：]?\s*$",re.I|re.M)
-SOLUTION_CUE = re.compile(ANSWER_CUE.pattern+r'|^[^\S\r\n]*提示[^\S\r\n]*[:：]',re.I|re.M)
-
-
-def is_exam_instruction(text):
-    return bool(EXAM_NOTE.match(text))
 
 
 def find_answer_boundary(pages):

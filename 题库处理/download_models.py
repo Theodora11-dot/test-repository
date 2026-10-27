@@ -10,7 +10,7 @@ from urllib.request import ProxyHandler, build_opener
 ROOT = Path(__file__).resolve().parent / "models"
 
 
-def fetch(model, owner="PaddlePaddle"):
+def fetch(model, owner="Qwen"):
     opener = build_opener(ProxyHandler({}))
     url = f"https://modelscope.cn/api/v1/models/{owner}/{model}/repo/files?Revision=master&Recursive=true"
     with opener.open(url, timeout=30) as response:
@@ -48,8 +48,8 @@ def fetch(model, owner="PaddlePaddle"):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("models", nargs="*", default=["PP-DocLayoutV3_safetensors", "PaddleOCR-VL-1.6"])
-    parser.add_argument("--owner", default="PaddlePaddle")
+    parser.add_argument("models", nargs="*", default=["Qwen3-VL-Embedding-2B"])
+    parser.add_argument("--owner", default="Qwen")
     args = parser.parse_args()
     for name in args.models:
         fetch(name, args.owner)

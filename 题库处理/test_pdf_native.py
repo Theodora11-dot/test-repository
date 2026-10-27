@@ -1,4 +1,4 @@
-"""Run: .venv-ocr/bin/python test_pdf_native.py. No network or GPU."""
+"""Run: python test_pdf_native.py. No network or GPU."""
 import tempfile
 from pathlib import Path
 from pdf_native import native_pages,find_answer_boundary,is_exam_instruction
@@ -47,7 +47,7 @@ def check():
         assert all(p["native_coordinates"] for p in native_pages(digital))
         assert not any(p["native_coordinates"] for p in native_pages(scanned))
         from native_crop import plans
-        from pipeline import load_papers
+        from common import load_papers
         papers={p['id']:p for p in load_papers() if p['subject']=='英语'}
         for pid,page_number,opening in [('81840',13,'One day I read an article'),('83707',1,'I was ready to pay for my bananas')]:
             cached=native_pages(root/'pdf-fast/pdfs'/('english-'+pid+'.html'))
@@ -82,7 +82,7 @@ def check():
         assert separator(np.ones(80,dtype=int)*10,45,1) is None
         ink=np.ones(80,dtype=int)*10;ink[25:35]=0;ink[40:44]=0
         assert separator(ink,45,1,minimum=39)==42, 'a previous blank line must not erase a dense question'
-        from pipeline import load_papers
+        from common import load_papers
         papers=load_papers()
         paper=next(p for p in papers if p['subject']=='数学' and p['id']=='195356')
         found,deferred=plans(paper,native_pages(digital),dict(page=3,y=52.19))

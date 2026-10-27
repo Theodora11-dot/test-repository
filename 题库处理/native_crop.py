@@ -10,9 +10,9 @@ import time
 from PIL import Image
 import numpy as np
 
-from pipeline import ROOT, atomic_json, image_path, load_papers, pin_image, source_dimensions
-from pdf_native import DIRECTORY, native_pages, is_exam_instruction, SOLUTION_CUE
-from embedding import question_skip_reason
+from common import (ROOT, atomic_json, image_path, load_papers, pin_image, source_dimensions,
+                    is_exam_instruction, SOLUTION_CUE, question_skip_reason)
+from pdf_native import DIRECTORY, native_pages
 
 RUN = DIRECTORY / "crops-run"
 HEADING = re.compile(r"^(?:第[一二三四五六七八九十\d]+[部分节章]|[一二三四五六七八九十]+[、．.]|(?:书面表达|应用文写作|读后续写|语法填空|七选五)(?:[（(:：\s]|$))")

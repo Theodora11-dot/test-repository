@@ -13,10 +13,9 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
-from pipeline import ROOT,atomic_json
+from common import ROOT,atomic_json,question_skip_reason
 from native_crop import ALGORITHM,RUN,RECHECK_VERSION,DATA_RECHECK
 from pdf_native import DIRECTORY
-from embedding import question_skip_reason
 
 INDEX=ROOT/'embedding-native-questions'
 

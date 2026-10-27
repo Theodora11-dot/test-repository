@@ -27,7 +27,7 @@ id_ed25519*
 *.part
 题库处理/models/
 题库处理/assets/
-题库处理/native-assets/
+题库处理/native-assets
 题库处理/output/
 题库处理/run/
 题库处理/embedding/
@@ -36,7 +36,6 @@ id_ed25519*
 !题库处理/embedding-native-questions/evaluation-prompts.json
 !题库处理/embedding-native-questions/evaluation-prompts-holdout.json
 题库处理/pdf-fast/*
-!题库处理/pdf-fast/*.py
 !题库处理/embedding-native-questions/index.sqlite3
 data-v1/
 data/

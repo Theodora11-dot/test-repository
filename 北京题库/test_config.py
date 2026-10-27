@@ -16,7 +16,7 @@ import find_same_titles as matching
 from settings import ROOT, load_config
 
 sys.path.insert(0, str(ROOT/'题库处理'))
-from pipeline import load_papers, image_path
+from common import load_papers, image_path
 
 
 def check():

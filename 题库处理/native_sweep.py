@@ -8,10 +8,9 @@ import os
 import time
 import sys
 
-from pipeline import ROOT,atomic_json,load_papers
+from common import ROOT,atomic_json,load_papers,question_skip_reason
 from pdf_native import DIRECTORY,native_pages,find_answer_boundary
 from native_crop import ALGORITHM,RECHECK_VERSION,DATA_RECHECK,RUN,crop_paper,plans
-from embedding import question_skip_reason
 
 
 def recheck(paper,audit):
