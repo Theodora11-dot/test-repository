@@ -15,7 +15,14 @@ pip install -r requirements.txt
 
 ## 2. 放置模型、索引和题图
 
-仓库只包含代码。推理前需将已有资源放到以下位置，保留索引记录的图片相对路径：
+向量索引通过 Git LFS 随仓库发布，约 1.28 GB；模型和题图需另外准备。安装 Git LFS 后，在仓库根目录下载索引：
+
+```bash
+git lfs install
+git lfs pull --include="题库处理/embedding-native-questions/index.sqlite3"
+```
+
+资源位置如下，题图需保留索引记录的相对路径：
 
 ```text
 题库处理/
@@ -33,7 +40,7 @@ python download_models.py --owner Qwen Qwen3-VL-Embedding-2B
 cd ..
 ```
 
-索引和题图需从已有处理结果中复制；仅克隆代码、下载模型不能直接搜索。若索引还引用 `assets/` 中的题图或答案图片，也需一并保留该目录。模型及编码设置须与建库时一致，程序会检查配置是否匹配。
+下载索引并准备模型后即可运行检索；查看原题截图还需从已有处理结果中复制题图。若索引还引用 `assets/` 中的题图或答案图片，也需一并保留该目录。模型及编码设置须与建库时一致，程序会检查配置是否匹配。
 
 ## 3. 运行查询
 
