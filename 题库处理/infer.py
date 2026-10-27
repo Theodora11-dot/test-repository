@@ -45,7 +45,7 @@ def prepare_search(db,device=None):
     # Avoid constructing and stacking a separate NumPy view for each of the 186k vectors.
     if rows and (not rows[0][1] or len(rows[0][1]) % 2 or len({len(row[1]) for row in rows}) != 1):
         raise ValueError('索引向量为空或长度不一致')
-    matrix = (np.frombuffer(b''.join(row[1] for row in rows), dtype='<f2').reshape(len(rows), -1)
+    matrix = (np.frombuffer(bytearray().join(row[1] for row in rows), dtype='<f2').reshape(len(rows), -1)
               if rows else np.empty((0, 0), dtype='<f2'))
     if device:
         import torch
