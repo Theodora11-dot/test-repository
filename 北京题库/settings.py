@@ -25,7 +25,7 @@ def load_config(path=None):
             raise ValueError('学科数据目录不能为空')
         directory = (path.parent / Path(value).expanduser()).resolve()
         if directory == ROOT or any(directory == p or p in directory.parents for p in
-                                    (ROOT/'北京题库', ROOT/'config', ROOT/'题库处理')):
+                                    (ROOT/'北京题库', ROOT/'config', ROOT/'pipeline')):
             raise ValueError('原始数据目录不能设在代码、配置或处理结果目录中')
         if directory in directories.values():
             raise ValueError('不同学科必须使用不同数据目录，避免清单互相覆盖')

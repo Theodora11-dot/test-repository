@@ -1,1 +1,1 @@
-题库处理/embedding-native-questions/index.sqlite3 filter=lfs diff=lfs merge=lfs -text
+pipeline/embedding-native-questions/index.sqlite3 filter=lfs diff=lfs merge=lfs -text

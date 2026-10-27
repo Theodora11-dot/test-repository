@@ -4,7 +4,7 @@ import tempfile
 from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT / '题库处理'))
+sys.path.insert(0, str(PROJECT / 'pipeline'))
 from common import ROOT
 from pdf_native import native_pages,find_answer_boundary,is_exam_instruction
 

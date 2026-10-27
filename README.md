@@ -37,10 +37,10 @@ sha256sum -c SHA256SUMS
 校验全部通过后，再放置索引并解压题图：
 
 ```bash
-mkdir -p ../题库处理/embedding-native-questions
-cp index.sqlite3 ../题库处理/embedding-native-questions/index.sqlite3
+mkdir -p ../pipeline/embedding-native-questions
+cp index.sqlite3 ../pipeline/embedding-native-questions/index.sqlite3
 for archive in question-images-*.tar; do
-  tar -xf "$archive" -C ../题库处理
+  tar -xf "$archive" -C ../pipeline
 done
 cd ..
 ```
@@ -48,7 +48,7 @@ cd ..
 每个 `.tar` 包都能独立解压，无需拼接；JPEG 已压缩，打包保留原图片字节。解压后的资源位置如下：
 
 ```text
-题库处理/
+pipeline/
 ├── models/Qwen3-VL-Embedding-2B/       # 模型、处理器文件及 download-manifest.json
 ├── embedding-native-questions/
 │   └── index.sqlite3                  # 已发布的单题向量索引
@@ -58,7 +58,7 @@ cd ..
 模型尚未下载时，在仓库根目录执行：
 
 ```bash
-cd 题库处理
+cd pipeline
 python download_models.py --owner Qwen Qwen3-VL-Embedding-2B
 cd ..
 ```
@@ -76,9 +76,9 @@ CUDA_VISIBLE_DEVICES=0 python infer.py \
   --limit 5
 ```
 
-替换引号内的要求即可搜索其他题目；`CUDA_VISIBLE_DEVICES=0` 指定使用哪张 GPU。每次启动会加载模型和索引，此命令执行一次查询后退出。仓库主目录的 `infer.py` 是推理入口，共用 `题库处理/embedding.py` 和 `题库处理/common.py`；只读取现有索引，默认位置如上，也可用 `--index /路径/index.sqlite3` 指定。
+替换引号内的要求即可搜索其他题目；`CUDA_VISIBLE_DEVICES=0` 指定使用哪张 GPU。每次启动会加载模型和索引，此命令执行一次查询后退出。仓库主目录的 `infer.py` 是推理入口，共用 `pipeline/embedding.py` 和 `pipeline/common.py`；只读取现有索引，默认位置如上，也可用 `--index /路径/index.sqlite3` 指定。
 
-标准输出返回 JSON 结果，模型加载信息写入标准错误。结果中的 `image` 是相对于 `题库处理/` 的截图路径，`score` 是排序得分，还会返回来源、页码等信息。打开对应图片即可查看原题。
+标准输出返回 JSON 结果，模型加载信息写入标准错误。结果中的 `image` 是相对于 `pipeline/` 的截图路径，`score` 是排序得分，还会返回来源、页码等信息。打开对应图片即可查看原题。
 
 `--limit 5` 最多返回 5 条；当前排序会过滤低于本次最高分 85% 的候选，因此可能少于 5 条。要求中仅部分关键词命中也能返回结果，未命中项不会报错；年级、难度等偏好不保证全部满足。答案解析不参与题图 embedding，检索结果仍需结合截图确认是否符合要求。
 

@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 
 PROJECT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(PROJECT), str(PROJECT / '题库处理')]
+sys.path[:0] = [str(PROJECT), str(PROJECT / 'pipeline')]
 import index
 import infer
 import embedding

@@ -11,7 +11,7 @@ from urllib.parse import urlsplit
 import yaml
 
 PROJECT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(PROJECT / '北京题库'), str(PROJECT / '题库处理')]
+sys.path[:0] = [str(PROJECT / '北京题库'), str(PROJECT / 'pipeline')]
 import capture_previews as capture
 import collect_catalog as catalog
 import find_same_titles as matching
@@ -40,6 +40,8 @@ def check():
                             dict(raw, subjects={'物理':'../data/physics'}),
                             dict(raw, subjects={'数学':'../same', '英语':'../same'}),
                             dict(raw, subjects={'数学':str(ROOT/'北京题库')}),
+                            dict(raw, subjects={'数学':str(ROOT/'pipeline')}),
+                            dict(raw, subjects={'数学':str(ROOT/'pipeline/native-assets')}),
                             dict(raw, subjects={'数学':''})]:
                 save(invalid)
                 try:

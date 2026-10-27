@@ -10,7 +10,7 @@ import time
 import numpy as np
 
 PROJECT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(PROJECT), str(PROJECT / '题库处理')]
+sys.path[:0] = [str(PROJECT), str(PROJECT / 'pipeline')]
 from common import ROOT, atomic_json
 from embedding import Encoder, MODEL, MAX_PIXELS, check_encoder
 from infer import open_index, prepare_search, rank
