@@ -13,7 +13,8 @@ import unicodedata
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-DATA = ROOT.parent
+sys.path.insert(0, str(ROOT.parent / '北京题库'))
+from settings import load_config
 VERSION = "crops-v3"
 OCR_MODEL = ROOT / "models/PaddleOCR-VL-1.6"
 TAG_MODEL = Path(os.environ.get("TAG_MODEL", str(ROOT / "models/Qwen3-8B")))
@@ -48,13 +49,13 @@ def pin_image(image, qid, root=ROOT):
     return str(asset.relative_to(root))
 
 
-def load_papers():
+def load_papers(config_path=None):
     papers = []
-    for subject in ("数学", "英语"):
-        base = DATA / f"北京题库_高中{subject}_20261021"
+    config = load_config(config_path)
+    for subject, base in config['subjects'].items():
         with (base / "预览图片清单.csv").open(encoding="utf-8-sig", newline="") as f:
             for row in csv.DictReader(f):
-                if row["status"] != "已保存":
+                if row["status"] != "已保存" or row['grade'] not in config['grades']:
                     continue
                 if not row["id"].isdigit() or not 0 < int(row["pages"]) <= 10000:
                     raise ValueError("资料 ID 或页数无效")

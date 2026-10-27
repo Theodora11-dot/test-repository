@@ -1,9 +1,9 @@
-"""导出菁师帮公开的高中数学资料目录；不下载文件、不消耗账号额度。"""
+"""按 YAML 配置导出菁师帮公开的高中资料目录；不下载试卷。"""
 
+import argparse
 import csv
 import json
 import re
-import sys
 import time
 from collections import Counter
 from datetime import datetime
@@ -12,9 +12,9 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 
-ROOT = Path(__file__).resolve().parent
+from settings import DEFAULT_CONFIG, load_config
+
 BASE = "https://www.jingshibang.com"
-GRADES = ("高一", "高二", "高三")
 FIELDS = ["资料ID", "年级", "标题", "年份", "区县", "类型", "目录来源", "标价（元）", "答案标注", "上传日期", "详情链接"]
 
 
@@ -35,38 +35,47 @@ def fetch(endpoint, params):
             time.sleep(2 ** attempt)
 
 
-def check(items, total):
+def check(items, total, subject):
     if len(items) != total:
         raise ValueError(f"目录不完整：期望 {total}，实际 {len(items)}")
     ids = [item["id"] for item in items]
     if len(set(ids)) != total or any(not isinstance(i, int) or i <= 0 for i in ids):
         raise ValueError("资料ID存在重复或异常")
-    if any(item.get("store_subject") != "数学" for item in items):
-        raise ValueError("目录混入非数学资料")
+    if any(item.get("store_subject") != subject for item in items):
+        raise ValueError(f"目录混入非{subject}资料")
 
 
-def write_csv(filename, rows):
+def write_csv(root, filename, rows):
     # ponytail: 用标准库 CSV，Excel 可直接打开；不引入电子表格依赖。
-    with (ROOT / filename).open("w", encoding="utf-8-sig", newline="") as stream:
+    with (root / filename).open("w", encoding="utf-8-sig", newline="") as stream:
         writer = csv.writer(stream)
         writer.writerow(FIELDS)
         for row in rows:
             writer.writerow(["'" + str(v) if str(v).lstrip().startswith(("=", "+", "-", "@")) else v for v in row])
 
 
-def main(from_snapshot=False):
+def main(subject, root, grades, from_snapshot=False):
+    root = Path(root)
+    root.mkdir(parents=True, exist_ok=True)
     started = datetime.now().astimezone().isoformat()
     snapshot = {"started_at": started, "source": BASE, "complete": False, "queries": []}
     merged = {}
-    queries = [(g, "/products", {"store_grade": g, "include_assembly": 1}) for g in GRADES]
-    cached = json.loads((ROOT / "原始目录.json").read_text(encoding="utf-8"))["queries"] if from_snapshot else []
+    queries = [(g, "/products", {"store_grade": g, "include_assembly": 1}) for g in grades]
+    path = root / '原始目录.json'
+    cached = json.loads(path.read_text(encoding='utf-8'))['queries'] if path.exists() else []
+    if from_snapshot and not path.exists():
+        raise FileNotFoundError(path)
+    for query in cached:
+        check(query['items'], query['total'], subject)
+    # ponytail: keep cached unselected grades; changing a filter must not discard collected source records.
+    snapshot['queries'] = [query for query in cached if query['grade'] not in grades]
     for grade, endpoint, filters in queries:
         items, total, page = [], None, 1
         previous = next((q for q in cached if q["grade"] == grade and q["endpoint"] == endpoint and q["filters"] == filters), None)
-        if previous:
+        if from_snapshot and previous:
             items, total = previous["items"], previous["total"]
         while total is None or len(items) < total:
-            params = {"store_subject": "数学", "page": page, "limit": 100, **filters}
+            params = {"store_subject": subject, "page": page, "limit": 100, **filters}
             result = fetch(endpoint, params)
             batch = result
             count = int(batch[0].get("count", 0)) if batch else 0
@@ -80,14 +89,16 @@ def main(from_snapshot=False):
             print(f"{grade} {endpoint}: {len(items)}/{total}", flush=True)
             page += 1
             time.sleep(0.25)
-        check(items, total)
+        check(items, total, subject)
         snapshot["queries"].append({"grade": grade, "endpoint": endpoint, "filters": filters, "total": total, "items": items})
-        temporary = ROOT / "原始目录.json.tmp"
+        temporary = root / "原始目录.json.tmp"
         temporary.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
-        temporary.replace(ROOT / "原始目录.json")
-        for item in items:
+        temporary.replace(root / "原始目录.json")
+    for query in snapshot['queries']:
+        grade = query['grade']
+        for item in query['items']:
             entry = merged.setdefault(item["id"], {"item": item, "grades": set(), "sources": set()})
-            if grade in GRADES:
+            if grade in ('高一', '高二', '高三'):
                 entry["grades"].add(grade)
             entry["sources"].add("试卷与汇编")
 
@@ -95,25 +106,25 @@ def main(from_snapshot=False):
     for identifier, entry in merged.items():
         item = entry["item"]
         title = item["store_name"]
-        grades = entry["grades"] or set(re.findall(r"高[一二三]", title)) or {"高中通用"}
+        item_grades = entry["grades"] or set(re.findall(r"高[一二三]", title)) or {"高中通用"}
         year = re.match(r"\d{4}(?:[-—]\d{4})?", title)
         rows.append([
-            identifier, "、".join(sorted(grades)), title, item.get("store_year") or (year.group() if year else ""),
+            identifier, "、".join(sorted(item_grades)), title, item.get("store_year") or (year.group() if year else ""),
             item.get("district", ""), item.get("store_type") or item.get("paper_type", ""),
             "、".join(sorted(entry["sources"])), item.get("price", ""), item.get("have_answer", "未标注"),
             item.get("add_time", ""), BASE + "/home/#/paperDetail?" + urlencode({"id": identifier, "title": title}),
         ])
     rows.sort(key=lambda row: (row[1], row[3], row[2], row[0]), reverse=True)
-    write_csv("高中数学_全部目录.csv", rows)
-    for grade in GRADES:
-        write_csv(grade + "数学_目录.csv", [row for row in rows if grade in row[1].split("、")])
-    (ROOT / "数学资料_搜索标题.txt").write_text("\n".join(sorted({row[2] for row in rows}, reverse=True)) + "\n", encoding="utf-8")
+    write_csv(root, f"高中{subject}_全部目录.csv", rows)
+    for grade in grades:
+        write_csv(root, grade + subject + "_目录.csv", [row for row in rows if grade in row[1].split("、")])
+    (root / f"{subject}资料_搜索标题.txt").write_text("\n".join(sorted({row[2] for row in rows}, reverse=True)) + "\n", encoding="utf-8")
     snapshot.update(complete=True, completed_at=datetime.now().astimezone().isoformat(), unique_count=len(rows))
-    (ROOT / "原始目录.json").write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
+    (root / "原始目录.json").write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
     summary = [
-        "北京题库（菁师帮）高中数学资料目录", "采集时间：" + started,
-        "范围：官网高一、高二、高三数学筛选结果，所有年份，包含其中的试卷与汇编。",
-        "各目录分页结果已核对总数、唯一资料ID、数学学科；按资料ID合并重复记录。",
+        f"北京题库（菁师帮）高中{subject}资料目录", "采集时间：" + started,
+        f"本次更新：官网{'、'.join(grades)}{subject}筛选结果，所有年份，包含试卷与汇编；保留已采集的其他年级记录。",
+        f"各目录分页结果已核对总数、唯一资料ID、{subject}学科；按资料ID合并重复记录。",
         *[f"{q['grade']} {q['endpoint']}：{q['total']} 条" for q in snapshot["queries"]],
         f"合并后共 {len(rows)} 份资料。",
         "归档年级：" + json.dumps(dict(Counter(row[1] for row in rows)), ensure_ascii=False),
@@ -121,23 +132,30 @@ def main(from_snapshot=False):
         "CSV 可用 Excel 打开；详情链接需要在官网中登录后使用。",
         "这是资料目录，CSV 与 JSON 本身不含试题正文。答案未标注不代表没有答案。",
         "标价及会员下载权限以官网当前状态为准；本文档不包含账号凭证。",
-        "重新采集：python3 collect_catalog.py；离线核验：python3 collect_catalog.py --check",
+        "采集与离线核验共用 config/config.yaml；核验参数为 --check。",
     ]
-    (ROOT / "采集说明.txt").write_text("\n".join(summary) + "\n", encoding="utf-8")
+    (root / "采集说明.txt").write_text("\n".join(summary) + "\n", encoding="utf-8")
     print("CATALOG_COMPLETE", len(rows), flush=True)
 
 
 if __name__ == "__main__":
-    if sys.argv[1:] == ["--check"]:
-        saved = json.loads((ROOT / "原始目录.json").read_text(encoding="utf-8"))
-        assert saved["complete"]
-        for query in saved["queries"]:
-            check(query["items"], query["total"])
-        identifiers = {i["id"] for q in saved["queries"] for i in q["items"]}
-        with (ROOT / "高中数学_全部目录.csv").open(encoding="utf-8-sig", newline="") as stream:
-            exported = list(csv.DictReader(stream))
-        assert len(exported) == len(identifiers) == saved["unique_count"]
-        assert {int(row["资料ID"]) for row in exported} == identifiers
-        print("核验通过：分页总数、ID唯一性、数学学科、CSV/JSON记录一致。")
-    else:
-        main(from_snapshot="--from-snapshot" in sys.argv[1:])
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--config', default=DEFAULT_CONFIG, type=Path)
+    parser.add_argument('--check', action='store_true')
+    parser.add_argument('--from-snapshot', action='store_true')
+    args = parser.parse_args()
+    config = load_config(args.config)
+    for subject, root in config['subjects'].items():
+        if args.check:
+            saved = json.loads((root / "原始目录.json").read_text(encoding="utf-8"))
+            assert saved["complete"]
+            for query in saved["queries"]:
+                check(query["items"], query["total"], subject)
+            identifiers = {i["id"] for q in saved["queries"] for i in q["items"]}
+            with (root / f"高中{subject}_全部目录.csv").open(encoding="utf-8-sig", newline="") as stream:
+                exported = list(csv.DictReader(stream))
+            assert len(exported) == len(identifiers) == saved["unique_count"]
+            assert {int(row["资料ID"]) for row in exported} == identifiers
+            print(f"核验通过：{subject}分页总数、ID唯一性、CSV/JSON记录一致。")
+        else:
+            main(subject, root, config['grades'], from_snapshot=args.from_snapshot)

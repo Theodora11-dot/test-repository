@@ -37,9 +37,7 @@ id_ed25519*
 !题库处理/embedding-native-questions/evaluation-prompts-holdout.json
 题库处理/pdf-fast/*
 !题库处理/pdf-fast/*.py
-北京题库_高中数学_20261021/*
-!北京题库_高中数学_20261021/*.py
-北京题库_高中英语_20261021/*
-!北京题库_高中英语_20261021/*.py
 !题库处理/embedding-native-questions/index.sqlite3
 data-v1/
+data/
+北京题库_高中*/

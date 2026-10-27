@@ -17,8 +17,9 @@ from pathlib import Path
 from urllib.parse import urlencode
 from urllib.error import HTTPError
 
+from collect_catalog import check
+from settings import DEFAULT_CONFIG, load_config
 
-ROOT = Path(__file__).resolve().parent
 BASE = "https://www.jingshibang.com"
 NETWORK = threading.Semaphore(2)
 STOP = threading.Event()
@@ -31,20 +32,24 @@ def jpeg_ok(path):
         return first == b"\xff\xd8" and stream.read(2) == b"\xff\xd9"
 
 
-def main(auth_file, limit):
+def main(subject, root, grades, auth_file, limit):
+    root = Path(root)
     token = json.loads(Path(auth_file).read_text())["token"]
     signal.signal(signal.SIGTERM, lambda *_: STOP.set())
     headers = {"User-Agent": "Mozilla/5.0", "Referer": BASE + "/home/", "Authorization": "Bearer " + token, "Authori-zation": "Bearer " + token}
-    snapshot = json.loads((ROOT / "原始目录.json").read_text(encoding="utf-8"))
+    snapshot = json.loads((root / "原始目录.json").read_text(encoding="utf-8"))
     items = {}
     for query in snapshot["queries"]:
+        check(query['items'], query['total'], subject)
+        if query['grade'] not in grades:
+            continue
         for item in query["items"]:
             items.setdefault(item["id"], {**item, "grade": query["grade"]})
     queue = sorted(items.values(), key=lambda item: (item.get("add_time", ""), item["id"]), reverse=True)
     if limit:
         queue = queue[:limit]
     records = {}
-    journal = ROOT / "预览图片记录.jsonl"
+    journal = root / "预览图片记录.jsonl"
     if journal.exists():
         for line in journal.read_text(encoding="utf-8").splitlines():
             if line.strip():
@@ -98,11 +103,11 @@ def main(auth_file, limit):
         record = {"id": item["id"], "grade": item["grade"], "title": item["store_name"], "price": item.get("price"), "pages": 0, "status": "未处理", "path": ""}
         previous = records.get(item["id"], {})
         if previous.get("status") == "已保存":
-            folder = ROOT / previous["path"]
+            folder = root / previous["path"]
             if (folder / "页数说明.json").exists() and len(list(folder.glob("page-*.jpg"))) == previous["pages"]:
                 return previous
         title = re.sub(r"[\\/\x00-\x1f]", "_", item["store_name"])[:65]
-        parent = ROOT / "预览图片" / item["grade"]
+        parent = root / "预览图片" / item["grade"]
         target = parent / (str(item["id"]) + "_" + title)
         if (target / "页数说明.json").exists():
             recovered = json.loads((target / "页数说明.json").read_text(encoding="utf-8"))
@@ -132,7 +137,7 @@ def main(auth_file, limit):
             images = sorted(work.glob("page-*.jpg"))
             if len(images) != pages or not all(jpeg_ok(path) for path in images):
                 raise ValueError("图片页数或JPEG完整性核验失败")
-            record.update(fetch_seconds=fetch_seconds, render_seconds=round(time.monotonic() - render_started, 2), pages=pages, status="已保存", path=str(target.relative_to(ROOT)), bytes=sum(p.stat().st_size for p in images), source=BASE + "/home/#/paperDetail?id=" + str(item["id"]), note="官网正常预览返回的页面；未逐份核对原出版页数")
+            record.update(fetch_seconds=fetch_seconds, render_seconds=round(time.monotonic() - render_started, 2), pages=pages, status="已保存", path=str(target.relative_to(root)), bytes=sum(p.stat().st_size for p in images), source=BASE + "/home/#/paperDetail?id=" + str(item["id"]), note="官网正常预览返回的页面；未逐份核对原出版页数")
             (work / "页数说明.json").write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
             work.rename(target)
         except Exception as error:
@@ -144,6 +149,10 @@ def main(auth_file, limit):
         return record
 
     started = time.monotonic()
+    counts = Counter(r['status'] for r in records.values())
+    progress = dict(planned=len(queue), checked=0, saved=counts['已保存'],
+                    pages=sum(r['pages'] for r in records.values()), status_counts=dict(counts),
+                    stopped_for_access=STOP.is_set(), elapsed_seconds=0)
     with journal.open("a", encoding="utf-8") as stream, ThreadPoolExecutor(max_workers=6) as pool:
         futures = {pool.submit(capture, item): item["id"] for item in queue}
         for number, future in enumerate(as_completed(futures), 1):
@@ -153,16 +162,16 @@ def main(auth_file, limit):
             stream.flush()
             counts = Counter(r["status"] for r in records.values())
             progress = {"planned": len(queue), "checked": number, "saved": counts["已保存"], "pages": sum(r["pages"] for r in records.values()), "status_counts": dict(counts), "stopped_for_access": STOP.is_set(), "elapsed_seconds": round(time.monotonic() - started, 1)}
-            temporary = ROOT / "预览图片进度.json.tmp"
+            temporary = root / "预览图片进度.json.tmp"
             temporary.write_text(json.dumps(progress, ensure_ascii=False, indent=2), encoding="utf-8")
-            temporary.replace(ROOT / "预览图片进度.json")
+            temporary.replace(root / "预览图片进度.json")
             if number <= 6 or number % 25 == 0 or number == len(queue):
                 print(json.dumps(progress, ensure_ascii=False), flush=True)
             if STOP.is_set():
                 for pending in futures:
                     pending.cancel()
                 break
-    with (ROOT / "预览图片清单.csv").open("w", encoding="utf-8-sig", newline="") as stream:
+    with (root / "预览图片清单.csv").open("w", encoding="utf-8-sig", newline="") as stream:
         columns = ["id", "grade", "title", "price", "pages", "status", "path", "reason"]
         writer = csv.DictWriter(stream, fieldnames=columns, extrasaction="ignore")
         writer.writeheader()
@@ -172,23 +181,30 @@ def main(auth_file, limit):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--config', default=DEFAULT_CONFIG, type=Path)
     parser.add_argument("--auth-file")
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
-    if args.check:
-        records = {}
-        for line in (ROOT / "预览图片记录.jsonl").read_text(encoding="utf-8").splitlines():
-            record = json.loads(line)
-            records[record["id"]] = record
-        saved = [r for r in records.values() if r["status"] == "已保存"]
-        assert saved, "尚无已完成图片"
-        for record in saved:
-            folder = ROOT / record["path"]
-            images = list(folder.glob("page-*.jpg"))
-            assert len(images) == record["pages"] > 0 and all(jpeg_ok(path) for path in images), record["id"]
-        print("核验通过：", len(saved), "份预览的图片页数、JPEG首尾和清单一致。")
-    else:
-        if not args.auth_file:
-            parser.error("需要 --auth-file 指向已授权登录会话的私有凭证文件")
-        main(args.auth_file, args.limit)
+    if args.limit < 0:
+        parser.error('--limit 不能小于 0')
+    if not args.check and not args.auth_file:
+        parser.error("需要 --auth-file 指向已授权登录会话的私有凭证文件")
+    config = load_config(args.config)
+    for subject, root in config['subjects'].items():
+        if args.check:
+            records = {}
+            for line in (root / "预览图片记录.jsonl").read_text(encoding="utf-8").splitlines():
+                record = json.loads(line)
+                records[record["id"]] = record
+            saved = [r for r in records.values() if r["status"] == "已保存"]
+            assert saved, "尚无已完成图片"
+            for record in saved:
+                folder = root / record["path"]
+                images = list(folder.glob("page-*.jpg"))
+                assert len(images) == record["pages"] > 0 and all(jpeg_ok(path) for path in images), record["id"]
+            print(f"核验通过：{subject} {len(saved)} 份预览的图片页数、JPEG首尾和清单一致。")
+        else:
+            if STOP.is_set():
+                break
+            main(subject, root, config['grades'], args.auth_file, args.limit)

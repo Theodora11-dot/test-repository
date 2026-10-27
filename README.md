@@ -18,7 +18,7 @@ pip install -r requirements.txt
 
 ## 2. 放置模型、索引和题图
 
-从 [data-v1 Release](https://github.com/Theodora11-dot/test-repository/releases/tag/data-v1) 下载索引、全部题图包和校验文件。附件在后台上传并校验完成后自动发布。全部数据约 21.5 GB；下载、解压和模型合计建议预留至少 50 GB 可用空间。
+从已发布的 [data-v1 Release](https://github.com/Theodora11-dot/test-repository/releases/tag/data-v1) 下载索引、全部题图包和校验文件。全部数据约 21.5 GB；下载、解压和模型合计建议预留至少 50 GB 可用空间。
 
 ```bash
 # 在仓库根目录执行；支持中断后继续下载。

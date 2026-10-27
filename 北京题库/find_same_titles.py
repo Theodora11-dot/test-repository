@@ -1,11 +1,11 @@
 """读取外站公开目录，以规范化同名匹配；不会请求受限下载。"""
 
+import argparse
 import csv
 import hashlib
 import html
 import json
 import re
-import sys
 import time
 import unicodedata
 from collections import defaultdict
@@ -14,8 +14,9 @@ from pathlib import Path
 from urllib.parse import quote, urljoin, urlsplit
 from urllib.request import Request, urlopen
 
+from collect_catalog import check
+from settings import DEFAULT_CONFIG, load_config
 
-ROOT = Path(__file__).resolve().parent
 CACHE = Path("/tmp/jsb-public-catalog-cache")
 SITE = "https://gaokaotiku.com"
 
@@ -49,32 +50,36 @@ def get_page(url):
             time.sleep(1)
 
 
-def entries(url, content):
+def entries(url, content, subject):
     # ponytail: 仅适配已核验的 h2 目录模板；模板变化时改用 HTMLParser。
     result = []
     for href, label in re.findall(r'<h2\b[^>]*>\s*<a\b[^>]*href="([^"]+)"[^>]*>(.*?)</a>\s*</h2>', content, re.S):
         target = urljoin(url, html.unescape(href))
         title = html.unescape(re.sub(r"<[^>]+>", "", label)).strip()
-        if urlsplit(target).hostname == "gaokaotiku.com" and "英语" in title:
+        if urlsplit(target).hostname == "gaokaotiku.com" and subject in title:
             result.append({"title": title, "url": target})
     return result
 
 
-def main():
+def main(subject, root, grades):
+    root = Path(root)
     CACHE.mkdir(exist_ok=True)
-    snapshot = json.loads((ROOT / "原始目录.json").read_text(encoding="utf-8"))
+    snapshot = json.loads((root / "原始目录.json").read_text(encoding="utf-8"))
     originals = {}
     lookup = defaultdict(list)
     for query in snapshot["queries"]:
+        check(query['items'], query['total'], subject)
+        if query['grade'] not in grades:
+            continue
         for item in query["items"]:
             if item["id"] not in originals:
                 originals[item["id"]] = {**item, "grade": query["grade"]}
                 lookup[normalize(item["store_name"])].append(item["id"])
     sources, tasks, failures = {}, [], []
-    for grade in ("高一", "高二", "高三"):
-        base = SITE + "/a/英语/" + grade + "/"
+    for grade in grades:
+        base = SITE + "/a/" + subject + "/" + grade + "/"
         page = get_page(base)
-        for item in entries(base, page):
+        for item in entries(base, page, subject):
             sources[item["url"]] = item
         last = re.search(r"href=['\"](list_\d+_(\d+)\.html)['\"][^>]*>末页", page)
         if not last:
@@ -87,7 +92,7 @@ def main():
         for number, future in enumerate(as_completed(futures), 1):
             url = futures[future]
             try:
-                for item in entries(url, future.result()):
+                for item in entries(url, future.result(), subject):
                     sources[item["url"]] = item
             except (OSError, ValueError) as error:
                 failures.append({"url": url, "error": type(error).__name__})
@@ -97,7 +102,7 @@ def main():
     for source in sources.values():
         for identifier in lookup.get(normalize(source["title"]), []):
             matches[identifier].append(source)
-    with (ROOT / "外站同名检索.csv").open("w", encoding="utf-8-sig", newline="") as stream:
+    with (root / "外站同名检索.csv").open("w", encoding="utf-8-sig", newline="") as stream:
         writer = csv.writer(stream)
         writer.writerow(["资料ID", "年级", "原始标题", "外站标题", "外站页面", "匹配方式", "下载状态", "说明"])
         for identifier, item in originals.items():
@@ -114,17 +119,24 @@ def main():
         "matched_originals": len(matches), "matched_links": sum(map(len, matches.values())),
         "failed_pages": failures, "sources": list(sources.values()),
     }
-    (ROOT / "外站目录证据.json").write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")
+    (root / "外站目录证据.json").write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")
     print("MATCHING_COMPLETE", {key: evidence[key] for key in ("original_count", "external_count", "matched_originals", "matched_links")}, "failed_pages", len(failures), flush=True)
 
 
 if __name__ == "__main__":
-    if sys.argv[1:] == ["--check"]:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--config', default=DEFAULT_CONFIG, type=Path)
+    parser.add_argument('--check', action='store_true')
+    args = parser.parse_args()
+    config = load_config(args.config)
+    if args.check:
         assert normalize("2025北京昌平高一（上）期末英语（教师版）-答案") == normalize("2025北京昌平高一（上）期末英语")
         assert normalize("2025北京昌平高一（上）期末英语") != normalize("2025北京昌平高一（下）期末英语")
         assert normalize("2025北京昌平高一（上）期末英语") != normalize("2026北京昌平高一（上）期末英语")
-        sample = '<h2 class="x"><a href="/a/英语/1.html">2025北京高一英语（上）</a></h2>'
-        assert entries(SITE, sample) == [{"title": "2025北京高一英语（上）", "url": SITE + "/a/英语/1.html"}]
+        for subject in config['subjects']:
+            sample = f'<h2 class="x"><a href="/a/{subject}/1.html">2025北京高一{subject}（上）</a></h2>'
+            assert entries(SITE, sample, subject) == [{"title": f"2025北京高一{subject}（上）", "url": SITE + f"/a/{subject}/1.html"}]
         print("核验通过：全半角与版本标记可匹配，年份和上下学期不会混淆。")
     else:
-        main()
+        for subject, root in config['subjects'].items():
+            main(subject, root, config['grades'])
