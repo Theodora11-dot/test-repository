@@ -77,7 +77,7 @@ CUDA_VISIBLE_DEVICES=0 python infer.py \
   --limit 5
 ```
 
-替换引号内的要求即可搜索其他题目；`CUDA_VISIBLE_DEVICES=0` 指定使用哪张 GPU。首次查询会加载模型，此命令执行一次查询后退出。`infer.py` 是独立推理入口，只读取现有索引；索引默认位置如上，也可用 `--index /路径/index.sqlite3` 指定。
+替换引号内的要求即可搜索其他题目；`CUDA_VISIBLE_DEVICES=0` 指定使用哪张 GPU。每次启动会加载模型和索引，此命令执行一次查询后退出。`infer.py` 是独立推理入口，只读取现有索引；索引默认位置如上，也可用 `--index /路径/index.sqlite3` 指定。
 
 标准输出返回 JSON 结果，模型加载信息写入标准错误。结果中的 `image` 是相对于 `题库处理/` 的截图路径，`score` 是排序得分，还会返回来源、页码等信息。打开对应图片即可查看原题。
 
