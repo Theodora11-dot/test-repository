@@ -3,10 +3,13 @@ import argparse
 import json
 import re
 import sqlite3
+import sys
 from pathlib import Path
 
 import numpy as np
 
+# Keep the shared encoder and data helpers beside the preparation code.
+sys.path.insert(0, str(Path(__file__).resolve().parent / '题库处理'))
 from common import ROOT, question_skip_reason
 from embedding import Encoder, MAX_PIXELS, check_encoder, unit_vector
 

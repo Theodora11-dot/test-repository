@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 
 import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import index
 import infer
 import embedding
@@ -265,7 +267,16 @@ def check_inference():
         embedding.MODEL = saved_model
     subprocess.run([sys.executable, '-c',
                     "import infer,sys; assert all(name not in sys.modules for name in ['index','prepare','eval','pdf_native','native_crop','pipeline','torch'])"],
-                   cwd=ROOT, check=True)
+                   cwd=ROOT.parent, check=True)
+    assert Path(infer.__file__).resolve() == ROOT.parent/'infer.py'
+    assert infer.INDEX == ROOT/'embedding-native-questions/index.sqlite3'
+    entry = str(ROOT.parent/'infer.py')
+    help_result = subprocess.run([sys.executable, entry, '--help'], cwd=tempfile.gettempdir(),
+                                 capture_output=True, text=True, check=True)
+    assert '--index' in help_result.stdout
+    empty_result = subprocess.run([sys.executable, entry, '  '], cwd=tempfile.gettempdir(),
+                                  capture_output=True, text=True, check=True)
+    assert json.loads(empty_result.stdout) == []
     print('PASS standalone inference, tolerant queries, input/model checks and read-only indexes')
 
 

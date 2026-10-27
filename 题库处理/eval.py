@@ -10,6 +10,7 @@ import numpy as np
 
 from common import ROOT, atomic_json
 from embedding import Encoder, MODEL, MAX_PIXELS, check_encoder
+sys.path.insert(0, str(ROOT.parent))
 from infer import open_index, prepare_search, rank
 
 DIRECTORY = ROOT / 'embedding-native-questions'

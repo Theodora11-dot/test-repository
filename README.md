@@ -71,24 +71,22 @@ Release 包含 185,722 张有效单题截图和对应索引。部分旧记录中
 
 ```bash
 source .venv/bin/activate
-cd 题库处理
 CUDA_VISIBLE_DEVICES=0 python infer.py \
   '给高一学生找三角函数练习，考查正弦函数图像的周期或平移，难度适中' \
   --limit 5
 ```
 
-替换引号内的要求即可搜索其他题目；`CUDA_VISIBLE_DEVICES=0` 指定使用哪张 GPU。每次启动会加载模型和索引，此命令执行一次查询后退出。`infer.py` 是独立推理入口，只读取现有索引；索引默认位置如上，也可用 `--index /路径/index.sqlite3` 指定。
+替换引号内的要求即可搜索其他题目；`CUDA_VISIBLE_DEVICES=0` 指定使用哪张 GPU。每次启动会加载模型和索引，此命令执行一次查询后退出。仓库主目录的 `infer.py` 是推理入口，共用 `题库处理/embedding.py` 和 `题库处理/common.py`；只读取现有索引，默认位置如上，也可用 `--index /路径/index.sqlite3` 指定。
 
 标准输出返回 JSON 结果，模型加载信息写入标准错误。结果中的 `image` 是相对于 `题库处理/` 的截图路径，`score` 是排序得分，还会返回来源、页码等信息。打开对应图片即可查看原题。
 
 `--limit 5` 最多返回 5 条；当前排序会过滤低于本次最高分 85% 的候选，因此可能少于 5 条。要求中仅部分关键词命中也能返回结果，未命中项不会报错；年级、难度等偏好不保证全部满足。答案解析不参与题图 embedding，检索结果仍需结合截图确认是否符合要求。
 
-连续查询时，在同一个 Python 进程复用模型和索引快照，避免每条查询都重新加载。先进入 `题库处理/`，再使用：
+连续查询时，在同一个 Python 进程复用模型和索引快照，避免每条查询都重新加载。在仓库主目录使用：
 
 ```python
 from contextlib import closing
-from embedding import Encoder, MAX_PIXELS, check_encoder
-from infer import open_index, prepare_search, search
+from infer import Encoder, MAX_PIXELS, check_encoder, open_index, prepare_search, search
 
 with closing(open_index()) as db:
     check_encoder(db)
