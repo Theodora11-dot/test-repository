@@ -1,4 +1,4 @@
-"""Run without a GPU or model: python test_index.py."""
+"""Run without a GPU or model: python test/test_index.py."""
 import tempfile
 import json
 import sqlite3
@@ -8,7 +8,8 @@ from pathlib import Path
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+PROJECT = Path(__file__).resolve().parents[1]
+sys.path[:0] = [str(PROJECT), str(PROJECT / '题库处理')]
 import index
 import infer
 import embedding

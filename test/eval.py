@@ -2,15 +2,17 @@
 import argparse
 import html
 import json
+from pathlib import Path
 import subprocess
 import sys
 import time
 
 import numpy as np
 
+PROJECT = Path(__file__).resolve().parents[1]
+sys.path[:0] = [str(PROJECT), str(PROJECT / '题库处理')]
 from common import ROOT, atomic_json
 from embedding import Encoder, MODEL, MAX_PIXELS, check_encoder
-sys.path.insert(0, str(ROOT.parent))
 from infer import open_index, prepare_search, rank
 
 DIRECTORY = ROOT / 'embedding-native-questions'
@@ -105,9 +107,11 @@ def main():
     group.add_argument('--check', action='store_true', help='运行软件检查，不加载模型或真实题库')
     args = parser.parse_args()
     if args.check:
-        for command in [('test_index.py',), ('test_pdf_native.py',), ('native_coverage.py', '--check'), ('prepare.py', '--check')]:
-            subprocess.run([sys.executable, str(ROOT / command[0]), *command[1:]], check=True)
-        subprocess.run([sys.executable, str(ROOT.parent / '北京题库/test_config.py')], check=True)
+        checks = Path(__file__).resolve().parent
+        for command in [(checks / 'test_index.py',), (checks / 'test_pdf_native.py',),
+                        (ROOT / 'native_coverage.py', '--check'), (ROOT / 'prepare.py', '--check'),
+                        (checks / 'test_config.py',)]:
+            subprocess.run([sys.executable, str(command[0]), *command[1:]], check=True)
         return
     if not args.name or any(c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-' for c in args.name):
         parser.error('报告名称只能包含英文字母、数字、下划线和连字符')

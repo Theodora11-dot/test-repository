@@ -1,6 +1,11 @@
-"""Run: python test_pdf_native.py. No network or GPU."""
+"""Run: python test/test_pdf_native.py. No network or GPU."""
+import sys
 import tempfile
 from pathlib import Path
+
+PROJECT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT / '题库处理'))
+from common import ROOT
 from pdf_native import native_pages,find_answer_boundary,is_exam_instruction
 
 
@@ -40,7 +45,7 @@ def check():
             '</block></flow></page></doc></body></html>')
         page=native_pages(word_xml)[0]
         assert page['question_starts'][0]['number']=='12' and page['body_bottom']==823, 'real bottom-of-page questions must precede the detected footer rather than a fixed margin'
-    root = Path(__file__).resolve().parent
+    root = ROOT
     digital = root / "pdf-fast/pdfs/math-195356.html"
     scanned = root / "pdf-fast/pdfs/math-199003.html"
     if digital.exists() and scanned.exists():

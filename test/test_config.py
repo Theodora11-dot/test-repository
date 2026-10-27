@@ -1,4 +1,4 @@
-"""Run: python 北京题库/test_config.py. No network, credentials, model or GPU needed."""
+"""Run: python test/test_config.py. No network, credentials, model or GPU needed."""
 import json
 import os
 from pathlib import Path
@@ -10,12 +10,13 @@ from urllib.parse import urlsplit
 
 import yaml
 
+PROJECT = Path(__file__).resolve().parents[1]
+sys.path[:0] = [str(PROJECT / '北京题库'), str(PROJECT / '题库处理')]
 import capture_previews as capture
 import collect_catalog as catalog
 import find_same_titles as matching
 from settings import ROOT, load_config
 
-sys.path.insert(0, str(ROOT/'题库处理'))
 from common import load_papers, image_path
 
 

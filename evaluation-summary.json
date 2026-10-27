@@ -659,7 +659,7 @@
     "top5_ids_and_scores_unchanged": 20,
     "real_model_inference_results": 5,
     "eval_report_queries": 20,
-    "software_check_command": "python 题库处理/eval.py --check",
+    "software_check_command": "python test/eval.py --check",
     "software_checks_passed": true,
     "legacy_ocr_processes_stopped": true,
     "scope": "复用既有查询向量比较排序；另用本地模型实际编码自然语言并通过 infer 入口返回截图。此检查不新增人工相关性标注。"
